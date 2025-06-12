@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: your-project-name
+    env: node
+    buildCommand: "cd server && npm install"
+    startCommand: "cd server && node app.js" # 或者你的启动文件名，比如 index.js、server.js 等
+    envVars:
+      - key: PORT
+        value: "3000"
