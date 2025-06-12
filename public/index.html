@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>毒苹果游戏</title>
+  <style>
+    #grid { display: grid; grid-template-columns: repeat(5, 50px); gap: 5px; }
+    .apple { width: 50px; height: 50px; font-size: 30px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h2>毒苹果游戏</h2>
+  <div id="grid"></div>
+  <p id="status">等待另一位玩家...</p>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let playerNumber = null;
+    let poisonSet = false;
+    let canEat = false;
+
+    const grid = document.getElementById('grid');
+    const status = document.getElementById('status');
+
+    for (let i = 0; i < 25; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'apple';
+      btn.textContent = '🍎';
+      btn.onclick = () => {
+        if (!poisonSet) {
+          socket.emit('setPoison', i);
+        } else if (canEat) {
+          socket.emit('eatApple', i);
+          canEat = false;
+        }
+      };
+      grid.appendChild(btn);
+    }
+
+    socket.on('playerNumber', num => {
+      playerNumber = num;
+      status.textContent = '你是玩家 ' + num + '，等待另一位玩家...';
+    });
+
+    socket.on('poisonSet', () => {
+      poisonSet = true;
+      canEat = Math.random() < 0.5;
+      status.textContent = canEat ? '你先吃，选一个苹果' : '等待对方选择苹果...';
+    });
+
+    socket.on('result', ({ index, isPoisoned }) => {
+      const buttons = document.querySelectorAll('.apple');
+      buttons[index].textContent = isPoisoned ? '☠️' : '😋';
+      status.textContent = isPoisoned ? '毒发身亡，游戏结束！' : '安全，轮到对方！';
+    });
+  </script>
+</body>
+</html>
